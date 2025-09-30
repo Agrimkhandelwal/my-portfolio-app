@@ -1,0 +1,1 @@
+{"root":["../index.ts","../seed.ts","../config/connectDb.ts","../models/Experience.ts","../models/Profile.ts","../models/Projects.ts","../models/Skills.ts","../routes/UserApi.ts"],"version":"5.9.2"}

@@ -1,84 +1,56 @@
 import express, { type Express, type Request, type Response } from "express";
-import mongoose from "mongoose";
 import cors from "cors";
 import dotenv from "dotenv";
-
-// Import routes and DB connection
 import apiRoutes from "./routes/UserApi.js";
 import connectDB from "./config/connectDb.js";
-
-// Import models and their corresponding types
-import ProfileModel, { type IProfile } from "./models/Profile.js";
-import ProjectModel, { type IProject } from "./models/Projects.js";
-import SkillModel, { type ISkill } from "./models/Skills.js";
 
 // Load environment variables
 dotenv.config();
 
-const app = express();
+const app: Express = express();
 
-// Middleware setup
+// --- Advanced CORS Configuration with Debugging ---
+const allowedOrigins = [process.env.FRONTEND_URL];
 
-app.use(express.json());
-const corsOptions = {
-  origin: process.env.FRONTEND_URL,
+const corsOptions: cors.CorsOptions = {
+  origin: (origin, callback) => {
+    // The 'origin' is the URL of the site making the request (your frontend)
+    // We check if this origin is in our list of allowed sites.
+    // The '!origin' part allows requests from tools like Postman that don't have an origin.
+    if (!origin || (allowedOrigins.indexOf(origin) !== -1)) {
+      callback(null, true); // Allow the request
+    } else {
+      // If the origin is not allowed, log it and reject the request.
+      console.error(`CORS Error: The origin '${origin}' was blocked.`);
+      callback(new Error('Not allowed by CORS'));
+    }
+  }
 };
+
 app.use(cors(corsOptions));
+app.use(express.json());
 
 
-// Main API routes from your router file
+// --- Routes ---
 app.use("/api", apiRoutes);
 
-// ----- Standalone Routes (See suggestion below) -----
-
-// Health check route
-app.get("/health", (req: Request, res: Response<{ status: string }>) => {
+// Health check
+app.get("/health", (req: Request, res: Response) => {
   res.status(200).json({ status: "ok" });
 });
 
-// Get Profile
-app.get("/profile", async (req: Request, res: Response<IProfile | { error: string } | null>) => {
-  try {
-    const profile = await ProfileModel.findOne(); // only one profile
-    res.json(profile);
-  } catch (err) {
-    res.status(500).json({ error: "Server error" });
-  }
-});
-
-// Get all Projects
-app.get("/projects", async (req: Request, res: Response<IProject[] | { error: string }>) => {
-  try {
-    const projects = await ProjectModel.find();
-    res.json(projects);
-  } catch (err) {
-    res.status(500).json({ error: "Server error" });
-  }
-});
-
-// Get all Skills
-app.get("/skills", async (req: Request, res: Response<ISkill[] | { error: string }>) => {
-  try {
-    const skills = await SkillModel.find();
-    res.json(skills);
-  } catch (err) {
-    res.status(500).json({ error: "Server error" });
-  }
-});
-
 // Root route
-app.get("/", (req: Request, res: Response<string>) => {
+app.get("/", (req: Request, res: Response) => {
   res.send("🚀 Portfolio API is running!");
 });
 
+
+// --- Server Startup ---
 const PORT: number = Number(process.env.PORT) || 5000;
 
-// Connect to the database and then start the server
 connectDB().then(() => {
-  app.listen(PORT, () => {
-    console.log(`✅ Server is running on port: ${PORT}`);
-  });
-}).catch(err => {
-    console.error("❌ Failed to connect to MongoDB", err);
-    process.exit(1);
+    app.listen(PORT, () => {
+        console.log(`Server is running on port ${PORT}`);
+    });
 });
+

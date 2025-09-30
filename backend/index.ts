@@ -15,11 +15,16 @@ import SkillModel, { type ISkill } from "./models/Skills.js";
 // Load environment variables
 dotenv.config();
 
-const app: Express = express();
+const app = express();
 
 // Middleware setup
-app.use(cors());
+
 app.use(express.json());
+const corsOptions = {
+  origin: process.env.FRONTEND_URL,
+};
+app.use(cors(corsOptions));
+
 
 // Main API routes from your router file
 app.use("/api", apiRoutes);

@@ -21,7 +21,8 @@ const ProjectSchema: Schema<IProject> = new mongoose.Schema({
   },
   skills:{
     type: [String],
-    required: true
+    required: true,
+    index: true 
   },
   link: {
     type: String,
